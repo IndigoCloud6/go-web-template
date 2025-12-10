@@ -22,9 +22,13 @@ func Success(c *gin.Context, data interface{}) {
 	})
 }
 
-// Error sends an error response
+// Error sends an error response with appropriate HTTP status code
 func Error(c *gin.Context, code int, message string) {
-	c.JSON(http.StatusOK, Response{
+	httpStatus := http.StatusInternalServerError
+	if code >= 400 && code < 600 {
+		httpStatus = code
+	}
+	c.JSON(httpStatus, Response{
 		Code:    code,
 		Message: message,
 	})

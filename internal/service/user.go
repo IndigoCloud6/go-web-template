@@ -8,7 +8,10 @@ import (
 
 	"github.com/IndigoCloud6/go-web-template/internal/model"
 	"github.com/IndigoCloud6/go-web-template/internal/repository"
+	"github.com/IndigoCloud6/go-web-template/pkg/logger"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // UserService handles business logic for users
@@ -41,10 +44,16 @@ func (s *userService) Create(ctx context.Context, req *model.CreateUserRequest) 
 		return nil, fmt.Errorf("email already exists")
 	}
 
+	// Hash password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("failed to hash password: %w", err)
+	}
+
 	user := &model.User{
 		Name:     req.Name,
 		Email:    req.Email,
-		Password: req.Password, // In production, hash the password
+		Password: string(hashedPassword),
 		Age:      req.Age,
 	}
 
@@ -78,8 +87,12 @@ func (s *userService) GetByID(ctx context.Context, id uint) (*model.User, error)
 	}
 
 	// Cache the result
-	userJSON, _ := json.Marshal(user)
-	s.redis.Set(ctx, cacheKey, userJSON, 5*time.Minute)
+	userJSON, err := json.Marshal(user)
+	if err != nil {
+		logger.Warn("Failed to marshal user for caching", zap.Error(err))
+	} else {
+		s.redis.Set(ctx, cacheKey, userJSON, 5*time.Minute)
+	}
 
 	return user, nil
 }
@@ -131,7 +144,12 @@ func (s *userService) Update(ctx context.Context, id uint, req *model.UpdateUser
 		user.Email = req.Email
 	}
 	if req.Password != "" {
-		user.Password = req.Password // In production, hash the password
+		// Hash password
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, fmt.Errorf("failed to hash password: %w", err)
+		}
+		user.Password = string(hashedPassword)
 	}
 	if req.Age > 0 {
 		user.Age = req.Age
