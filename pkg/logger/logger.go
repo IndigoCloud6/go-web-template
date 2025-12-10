@@ -49,7 +49,7 @@ func Init(cfg *config.LoggerConfig) error {
 
 	var writer zapcore.WriteSyncer
 	if cfg.Output == "file" {
-		file, err := os.OpenFile(cfg.FilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		file, err := os.OpenFile(cfg.FilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 		if err != nil {
 			return err
 		}

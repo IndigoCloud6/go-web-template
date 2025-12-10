@@ -362,6 +362,23 @@ GOOS=linux GOARCH=amd64 go build -o bin/server cmd/server/main.go
 - ✅ Unified response format
 - ✅ Docker and Docker Compose support
 - ✅ Makefile for common tasks
+- ✅ Secure password hashing with bcrypt
+- ✅ Proper HTTP status codes for errors
+
+## 生产环境建议 (Production Recommendations)
+
+This template provides a solid foundation, but for production use, consider:
+
+- **Error Handling**: Implement custom error types to distinguish between different error scenarios (validation errors, not found errors, internal errors) for more precise HTTP status code mapping
+- **Cache Strategy**: For high-traffic applications, consider using cache versioning or cache tags instead of key scanning for better performance
+- **Authentication**: Add JWT or OAuth2 authentication middleware
+- **Rate Limiting**: Implement API rate limiting to prevent abuse
+- **Monitoring**: Add metrics collection (Prometheus) and tracing (OpenTelemetry)
+- **Testing**: Add comprehensive unit tests and integration tests
+- **Database Migrations**: Use a migration tool like golang-migrate for better version control
+- **Graceful Shutdown**: Implement graceful shutdown to handle in-flight requests
+- **Environment-specific Configs**: Separate configs for dev, staging, and production
+- **API Versioning**: Consider API versioning strategy for future changes
 
 ## 许可证 (License)
 

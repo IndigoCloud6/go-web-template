@@ -61,8 +61,13 @@ func (s *userService) Create(ctx context.Context, req *model.CreateUserRequest) 
 		return nil, err
 	}
 
-	// Clear user list cache
-	s.redis.Del(ctx, "users:list:*")
+	// Clear user list cache - note: in production, use a more sophisticated cache invalidation strategy
+	// For simplicity in this template, we just mark a cache version or use specific keys
+	// This is a simplified approach; consider using cache tags or versioning in production
+	keys, _ := s.redis.Keys(ctx, "users:list:*").Result()
+	if len(keys) > 0 {
+		s.redis.Del(ctx, keys...)
+	}
 
 	return user, nil
 }
@@ -162,7 +167,12 @@ func (s *userService) Update(ctx context.Context, id uint, req *model.UpdateUser
 	// Clear cache
 	cacheKey := fmt.Sprintf("user:%d", id)
 	s.redis.Del(ctx, cacheKey)
-	s.redis.Del(ctx, "users:list:*")
+	
+	// Clear user list cache
+	keys, _ := s.redis.Keys(ctx, "users:list:*").Result()
+	if len(keys) > 0 {
+		s.redis.Del(ctx, keys...)
+	}
 
 	return user, nil
 }
@@ -182,7 +192,12 @@ func (s *userService) Delete(ctx context.Context, id uint) error {
 	// Clear cache
 	cacheKey := fmt.Sprintf("user:%d", id)
 	s.redis.Del(ctx, cacheKey)
-	s.redis.Del(ctx, "users:list:*")
+	
+	// Clear user list cache
+	keys, _ := s.redis.Keys(ctx, "users:list:*").Result()
+	if len(keys) > 0 {
+		s.redis.Del(ctx, keys...)
+	}
 
 	return nil
 }
