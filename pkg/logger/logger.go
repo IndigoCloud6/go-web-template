@@ -63,19 +63,13 @@ func Init(cfg *config.LoggerConfig) error {
 		if maxAge == 0 {
 			maxAge = 28
 		}
-		compress := cfg.Compress
-		// Default to true if not explicitly set to false
-		// Since bool zero value is false, we check if any rotation param is set
-		if cfg.MaxSize == 0 && cfg.MaxBackups == 0 && cfg.MaxAge == 0 {
-			compress = true
-		}
 
 		lumberJackLogger := &lumberjack.Logger{
 			Filename:   cfg.FilePath,
 			MaxSize:    maxSize,    // MB
 			MaxBackups: maxBackups,
 			MaxAge:     maxAge,     // days
-			Compress:   compress,
+			Compress:   cfg.Compress,
 		}
 		writer = zapcore.AddSync(lumberJackLogger)
 	} else {

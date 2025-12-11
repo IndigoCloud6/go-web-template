@@ -43,10 +43,10 @@ type LoggerConfig struct {
 	Format     string `mapstructure:"format"`
 	Output     string `mapstructure:"output"`
 	FilePath   string `mapstructure:"file_path"`
-	MaxSize    int    `mapstructure:"max_size"`     // 单个日志文件最大尺寸（MB），默认 100
-	MaxBackups int    `mapstructure:"max_backups"`  // 保留的旧日志文件最大数量，默认 3
-	MaxAge     int    `mapstructure:"max_age"`      // 保留旧日志文件的最大天数，默认 28
-	Compress   bool   `mapstructure:"compress"`     // 是否压缩旧日志文件，默认 true
+	MaxSize    int    `mapstructure:"max_size"`     // Maximum size in MB of a single log file before rotation, default 100
+	MaxBackups int    `mapstructure:"max_backups"`  // Maximum number of old log files to retain, default 3
+	MaxAge     int    `mapstructure:"max_age"`      // Maximum number of days to retain old log files, default 28
+	Compress   bool   `mapstructure:"compress"`     // Whether to compress rotated log files, set to true to enable
 }
 
 // Load loads configuration from file and environment variables

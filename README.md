@@ -111,10 +111,10 @@ logger:
   format: json # json, console
   output: stdout # stdout, file
   file_path: logs/app.log
-  max_size: 100       # 单个日志文件最大尺寸（MB）
-  max_backups: 3      # 保留的旧日志文件最大数量
-  max_age: 28         # 保留旧日志文件的最大天数
-  compress: true      # 是否压缩旧日志文件
+  max_size: 100       # Maximum size in MB of a single log file before rotation
+  max_backups: 3      # Maximum number of old log files to retain
+  max_age: 28         # Maximum number of days to retain old log files
+  compress: true      # Whether to compress rotated log files
 ```
 
 You can also use environment variables to override configuration:
