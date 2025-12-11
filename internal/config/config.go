@@ -39,10 +39,14 @@ type RedisConfig struct {
 }
 
 type LoggerConfig struct {
-	Level    string `mapstructure:"level"`
-	Format   string `mapstructure:"format"`
-	Output   string `mapstructure:"output"`
-	FilePath string `mapstructure:"file_path"`
+	Level      string `mapstructure:"level"`
+	Format     string `mapstructure:"format"`
+	Output     string `mapstructure:"output"`
+	FilePath   string `mapstructure:"file_path"`
+	MaxSize    int    `mapstructure:"max_size"`     // Maximum size in MB of a single log file before rotation, default 100
+	MaxBackups int    `mapstructure:"max_backups"`  // Maximum number of old log files to retain, default 3
+	MaxAge     int    `mapstructure:"max_age"`      // Maximum number of days to retain old log files, default 28
+	Compress   bool   `mapstructure:"compress"`     // Whether to compress rotated log files, set to true to enable
 }
 
 // Load loads configuration from file and environment variables

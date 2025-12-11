@@ -8,6 +8,7 @@ A production-ready Go web service template with best practices and modern techno
 - **GORM** - ORM library for MySQL
 - **go-redis/v9** - Redis client
 - **Zap** - Structured, leveled logging
+- **Lumberjack** - Log rotation with automatic file management
 - **Viper** - Configuration management with environment variable support
 - **Validator** - Request validation (gin's built-in validator/v10)
 - **Wire** - Compile-time dependency injection
@@ -110,6 +111,10 @@ logger:
   format: json # json, console
   output: stdout # stdout, file
   file_path: logs/app.log
+  max_size: 100       # Maximum size in MB of a single log file before rotation
+  max_backups: 3      # Maximum number of old log files to retain
+  max_age: 28         # Maximum number of days to retain old log files
+  compress: true      # Whether to compress rotated log files
 ```
 
 You can also use environment variables to override configuration:
@@ -349,6 +354,7 @@ GOOS=linux GOARCH=amd64 go build -o bin/server cmd/server/main.go
 - ✅ Clean architecture with clear separation of concerns
 - ✅ Dependency injection with Wire
 - ✅ Structured logging with Zap
+- ✅ Log rotation with automatic file management (size-based and time-based rotation, compression, auto-cleanup)
 - ✅ Configuration management with Viper
 - ✅ Request validation with Gin's validator
 - ✅ Redis caching support

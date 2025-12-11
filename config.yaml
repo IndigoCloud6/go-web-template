@@ -24,3 +24,7 @@ logger:
   format: json # json, console
   output: file # stdout, file
   file_path: logs/app.log
+  max_size: 100       # Maximum size in MB of a single log file before rotation
+  max_backups: 3      # Maximum number of old log files to retain
+  max_age: 28         # Maximum number of days to retain old log files
+  compress: true      # Whether to compress rotated log files
