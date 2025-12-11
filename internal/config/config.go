@@ -39,10 +39,14 @@ type RedisConfig struct {
 }
 
 type LoggerConfig struct {
-	Level    string `mapstructure:"level"`
-	Format   string `mapstructure:"format"`
-	Output   string `mapstructure:"output"`
-	FilePath string `mapstructure:"file_path"`
+	Level      string `mapstructure:"level"`
+	Format     string `mapstructure:"format"`
+	Output     string `mapstructure:"output"`
+	FilePath   string `mapstructure:"file_path"`
+	MaxSize    int    `mapstructure:"max_size"`     // 单个日志文件最大尺寸（MB），默认 100
+	MaxBackups int    `mapstructure:"max_backups"`  // 保留的旧日志文件最大数量，默认 3
+	MaxAge     int    `mapstructure:"max_age"`      // 保留旧日志文件的最大天数，默认 28
+	Compress   bool   `mapstructure:"compress"`     // 是否压缩旧日志文件，默认 true
 }
 
 // Load loads configuration from file and environment variables

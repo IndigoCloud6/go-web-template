@@ -6,6 +6,7 @@ import (
 	"github.com/IndigoCloud6/go-web-template/internal/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var Logger *zap.Logger
@@ -49,11 +50,34 @@ func Init(cfg *config.LoggerConfig) error {
 
 	var writer zapcore.WriteSyncer
 	if cfg.Output == "file" {
-		file, err := os.OpenFile(cfg.FilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
-		if err != nil {
-			return err
+		// Set default values if not configured
+		maxSize := cfg.MaxSize
+		if maxSize == 0 {
+			maxSize = 100
 		}
-		writer = zapcore.AddSync(file)
+		maxBackups := cfg.MaxBackups
+		if maxBackups == 0 {
+			maxBackups = 3
+		}
+		maxAge := cfg.MaxAge
+		if maxAge == 0 {
+			maxAge = 28
+		}
+		compress := cfg.Compress
+		// Default to true if not explicitly set to false
+		// Since bool zero value is false, we check if any rotation param is set
+		if cfg.MaxSize == 0 && cfg.MaxBackups == 0 && cfg.MaxAge == 0 {
+			compress = true
+		}
+
+		lumberJackLogger := &lumberjack.Logger{
+			Filename:   cfg.FilePath,
+			MaxSize:    maxSize,    // MB
+			MaxBackups: maxBackups,
+			MaxAge:     maxAge,     // days
+			Compress:   compress,
+		}
+		writer = zapcore.AddSync(lumberJackLogger)
 	} else {
 		writer = zapcore.AddSync(os.Stdout)
 	}

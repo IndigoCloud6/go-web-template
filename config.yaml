@@ -24,3 +24,7 @@ logger:
   format: json # json, console
   output: file # stdout, file
   file_path: logs/app.log
+  max_size: 100       # 单个日志文件最大尺寸（MB）
+  max_backups: 3      # 保留的旧日志文件最大数量
+  max_age: 28         # 保留旧日志文件的最大天数
+  compress: true      # 是否压缩旧日志文件
