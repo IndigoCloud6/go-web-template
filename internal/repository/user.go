@@ -76,5 +76,6 @@ func (r *userRepository) Delete(ctx context.Context, id uint) error {
 func (r *userRepository) Count(ctx context.Context) (int64, error) {
 	var count int64
 	err := r.db.WithContext(ctx).Model(&model.User{}).Count(&count).Error
+	r.db.WithContext(ctx).Where(&model.User{}).Count(&count)
 	return count, err
 }

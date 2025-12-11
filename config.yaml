@@ -6,8 +6,8 @@ database:
   host: localhost
   port: 3306
   user: root
-  password: root
-  database: go_web_template
+  password: 1qaz!QAZ
+  database: maxyun
   max_idle_conns: 10
   max_open_conns: 100
   conn_max_lifetime: 3600 # seconds
@@ -15,12 +15,12 @@ database:
 redis:
   host: localhost
   port: 6379
-  password: ""
+  password: maxyun
   db: 0
   pool_size: 10
 
 logger:
   level: debug # debug, info, warn, error
   format: json # json, console
-  output: stdout # stdout, file
+  output: file # stdout, file
   file_path: logs/app.log

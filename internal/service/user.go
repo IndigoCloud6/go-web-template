@@ -167,7 +167,7 @@ func (s *userService) Update(ctx context.Context, id uint, req *model.UpdateUser
 	// Clear cache
 	cacheKey := fmt.Sprintf("user:%d", id)
 	s.redis.Del(ctx, cacheKey)
-	
+
 	// Clear user list cache
 	keys, _ := s.redis.Keys(ctx, "users:list:*").Result()
 	if len(keys) > 0 {
@@ -192,7 +192,7 @@ func (s *userService) Delete(ctx context.Context, id uint) error {
 	// Clear cache
 	cacheKey := fmt.Sprintf("user:%d", id)
 	s.redis.Del(ctx, cacheKey)
-	
+
 	// Clear user list cache
 	keys, _ := s.redis.Keys(ctx, "users:list:*").Result()
 	if len(keys) > 0 {
