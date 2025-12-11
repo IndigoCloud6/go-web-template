@@ -20,7 +20,7 @@ import (
 // Injectors from wire.go:
 
 // InitializeApp initializes the application with all dependencies
-func InitializeApp(cfg *config.Config) (*handler.UserHandler, error) {
+func InitializeApp(cfg *config.Config) (*Handlers, error) {
 	db, err := provideDatabase(cfg)
 	if err != nil {
 		return nil, err
@@ -32,10 +32,23 @@ func InitializeApp(cfg *config.Config) (*handler.UserHandler, error) {
 	}
 	userService := service.NewUserService(userRepository, client)
 	userHandler := handler.NewUserHandler(userService)
-	return userHandler, nil
+	productRepository := repository.NewProductRepository(db)
+	productService := service.NewProductService(productRepository, client)
+	productHandler := handler.NewProductHandler(productService)
+	handlers := &Handlers{
+		UserHandler:    userHandler,
+		ProductHandler: productHandler,
+	}
+	return handlers, nil
 }
 
 // wire.go:
+
+// Handlers holds all the application handlers
+type Handlers struct {
+	UserHandler    *handler.UserHandler
+	ProductHandler *handler.ProductHandler
+}
 
 func provideDatabase(cfg *config.Config) (*gorm.DB, error) {
 	return database.NewMySQL(&cfg.Database)

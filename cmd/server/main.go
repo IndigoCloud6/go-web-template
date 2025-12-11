@@ -54,12 +54,12 @@ func main() {
 	}
 
 	// Auto-migrate models
-	if err := db.AutoMigrate(&model.User{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.Product{}); err != nil {
 		logger.Fatal("Failed to auto-migrate database")
 	}
 
 	// Initialize app with Wire
-	userHandler, err := wire.InitializeApp(cfg)
+	handlers, err := wire.InitializeApp(cfg)
 	if err != nil {
 		logger.Fatal("Failed to initialize app")
 	}
@@ -87,11 +87,20 @@ func main() {
 	{
 		users := v1.Group("/users")
 		{
-			users.POST("", userHandler.CreateUser)
-			users.GET("", userHandler.ListUsers)
-			users.GET("/:id", userHandler.GetUser)
-			users.PUT("/:id", userHandler.UpdateUser)
-			users.DELETE("/:id", userHandler.DeleteUser)
+			users.POST("", handlers.UserHandler.CreateUser)
+			users.GET("", handlers.UserHandler.ListUsers)
+			users.GET("/:id", handlers.UserHandler.GetUser)
+			users.PUT("/:id", handlers.UserHandler.UpdateUser)
+			users.DELETE("/:id", handlers.UserHandler.DeleteUser)
+		}
+
+		products := v1.Group("/products")
+		{
+			products.POST("", handlers.ProductHandler.CreateProduct)
+			products.GET("", handlers.ProductHandler.ListProducts)
+			products.GET("/:id", handlers.ProductHandler.GetProduct)
+			products.PUT("/:id", handlers.ProductHandler.UpdateProduct)
+			products.DELETE("/:id", handlers.ProductHandler.DeleteProduct)
 		}
 	}
 

@@ -15,8 +15,14 @@ import (
 	"gorm.io/gorm"
 )
 
+// Handlers holds all the application handlers
+type Handlers struct {
+	UserHandler    *handler.UserHandler
+	ProductHandler *handler.ProductHandler
+}
+
 // InitializeApp initializes the application with all dependencies
-func InitializeApp(cfg *config.Config) (*handler.UserHandler, error) {
+func InitializeApp(cfg *config.Config) (*Handlers, error) {
 	wire.Build(
 		// Database
 		provideDatabase,
@@ -24,10 +30,15 @@ func InitializeApp(cfg *config.Config) (*handler.UserHandler, error) {
 		provideRedis,
 		// Repository
 		repository.NewUserRepository,
+		repository.NewProductRepository,
 		// Service
 		service.NewUserService,
+		service.NewProductService,
 		// Handler
 		handler.NewUserHandler,
+		handler.NewProductHandler,
+		// Handlers struct
+		wire.Struct(new(Handlers), "*"),
 	)
 	return nil, nil
 }
