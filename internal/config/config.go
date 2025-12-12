@@ -12,11 +12,13 @@ type Config struct {
 	Database DatabaseConfig `mapstructure:"database"`
 	Redis    RedisConfig    `mapstructure:"redis"`
 	Logger   LoggerConfig   `mapstructure:"logger"`
+	JWT      JWTConfig      `mapstructure:"jwt"`
 }
 
 type ServerConfig struct {
-	Port int    `mapstructure:"port"`
-	Mode string `mapstructure:"mode"`
+	Port            int    `mapstructure:"port"`
+	Mode            string `mapstructure:"mode"`
+	ShutdownTimeout int    `mapstructure:"shutdown_timeout"` // graceful shutdown timeout in seconds
 }
 
 type DatabaseConfig struct {
@@ -47,6 +49,13 @@ type LoggerConfig struct {
 	MaxBackups int    `mapstructure:"max_backups"`  // Maximum number of old log files to retain, default 3
 	MaxAge     int    `mapstructure:"max_age"`      // Maximum number of days to retain old log files, default 28
 	Compress   bool   `mapstructure:"compress"`     // Whether to compress rotated log files, set to true to enable
+}
+
+// JWTConfig holds JWT authentication configuration
+type JWTConfig struct {
+	Secret          string `mapstructure:"secret"`           // Secret key for signing tokens
+	ExpirationHours int    `mapstructure:"expiration_hours"` // Token expiration time in hours
+	Issuer          string `mapstructure:"issuer"`           // Token issuer
 }
 
 // Load loads configuration from file and environment variables

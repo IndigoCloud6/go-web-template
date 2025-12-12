@@ -1,8 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/IndigoCloud6/go-web-template/internal/config"
 	"github.com/IndigoCloud6/go-web-template/internal/middleware"
@@ -32,6 +38,11 @@ import (
 
 // @host localhost:8080
 // @BasePath /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 func main() {
 	// Load configuration
 	cfg, err := config.Load("config.yaml")
@@ -85,6 +96,20 @@ func main() {
 	// API routes
 	v1 := r.Group("/api/v1")
 	{
+		// Auth routes (public)
+		auth := v1.Group("/auth")
+		{
+			auth.POST("/login", handlers.AuthHandler.Login)
+		}
+
+		// Protected auth routes
+		authProtected := v1.Group("/auth")
+		authProtected.Use(middleware.JWTAuth(&cfg.JWT))
+		{
+			authProtected.POST("/refresh", handlers.AuthHandler.RefreshToken)
+			authProtected.GET("/me", handlers.AuthHandler.GetCurrentUser)
+		}
+
 		users := v1.Group("/users")
 		{
 			users.POST("", handlers.UserHandler.CreateUser)
@@ -104,10 +129,42 @@ func main() {
 		}
 	}
 
-	// Start server
+	// Create HTTP server
 	addr := fmt.Sprintf(":%d", cfg.Server.Port)
-	logger.Info(fmt.Sprintf("Server starting on %s", addr))
-	if err := r.Run(addr); err != nil {
-		logger.Fatal(fmt.Sprintf("Failed to start server: %v", err))
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: r,
 	}
+
+	// Start server in a goroutine
+	go func() {
+		logger.Info(fmt.Sprintf("Server starting on %s", addr))
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Fatal(fmt.Sprintf("Failed to start server: %v", err))
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server
+	quit := make(chan os.Signal, 1)
+	// Accept SIGINT (Ctrl+C) and SIGTERM (docker stop, k8s termination)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	logger.Info("Shutting down server...")
+
+	// Set shutdown timeout from config, default to 30 seconds
+	shutdownTimeout := cfg.Server.ShutdownTimeout
+	if shutdownTimeout <= 0 {
+		shutdownTimeout = 30
+	}
+
+	// Create a context with timeout for shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(shutdownTimeout)*time.Second)
+	defer cancel()
+
+	// Attempt graceful shutdown
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.Fatal(fmt.Sprintf("Server forced to shutdown: %v", err))
+	}
+
+	logger.Info("Server exited gracefully")
 }

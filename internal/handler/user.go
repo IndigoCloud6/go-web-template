@@ -5,6 +5,7 @@ import (
 
 	"github.com/IndigoCloud6/go-web-template/internal/model"
 	"github.com/IndigoCloud6/go-web-template/internal/service"
+	apperrors "github.com/IndigoCloud6/go-web-template/pkg/errors"
 	"github.com/IndigoCloud6/go-web-template/pkg/response"
 	"github.com/gin-gonic/gin"
 )
@@ -35,13 +36,13 @@ func NewUserHandler(userService service.UserService) *UserHandler {
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	var req model.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, err.Error())
+		response.ErrorFromAppError(c, apperrors.NewValidationErrorWithCause("invalid request body", err))
 		return
 	}
 
 	user, err := h.userService.Create(c.Request.Context(), &req)
 	if err != nil {
-		response.InternalServerError(c, err.Error())
+		response.ErrorFromAppError(c, err)
 		return
 	}
 
@@ -65,13 +66,13 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
-		response.BadRequest(c, "invalid user id")
+		response.ErrorFromAppError(c, apperrors.NewValidationError("invalid user id"))
 		return
 	}
 
 	user, err := h.userService.GetByID(c.Request.Context(), uint(id))
 	if err != nil {
-		response.NotFound(c, "user not found")
+		response.ErrorFromAppError(c, err)
 		return
 	}
 
@@ -96,7 +97,7 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 
 	users, total, err := h.userService.List(c.Request.Context(), page, pageSize)
 	if err != nil {
-		response.InternalServerError(c, err.Error())
+		response.ErrorFromAppError(c, err)
 		return
 	}
 
@@ -130,19 +131,19 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
-		response.BadRequest(c, "invalid user id")
+		response.ErrorFromAppError(c, apperrors.NewValidationError("invalid user id"))
 		return
 	}
 
 	var req model.UpdateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, err.Error())
+		response.ErrorFromAppError(c, apperrors.NewValidationErrorWithCause("invalid request body", err))
 		return
 	}
 
 	user, err := h.userService.Update(c.Request.Context(), uint(id), &req)
 	if err != nil {
-		response.InternalServerError(c, err.Error())
+		response.ErrorFromAppError(c, err)
 		return
 	}
 
@@ -166,12 +167,12 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
-		response.BadRequest(c, "invalid user id")
+		response.ErrorFromAppError(c, apperrors.NewValidationError("invalid user id"))
 		return
 	}
 
 	if err := h.userService.Delete(c.Request.Context(), uint(id)); err != nil {
-		response.InternalServerError(c, err.Error())
+		response.ErrorFromAppError(c, err)
 		return
 	}
 

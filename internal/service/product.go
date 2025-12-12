@@ -8,6 +8,7 @@ import (
 
 	"github.com/IndigoCloud6/go-web-template/internal/model"
 	"github.com/IndigoCloud6/go-web-template/internal/repository"
+	apperrors "github.com/IndigoCloud6/go-web-template/pkg/errors"
 	"github.com/IndigoCloud6/go-web-template/pkg/logger"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -45,7 +46,7 @@ func (s *productService) Create(ctx context.Context, req *model.CreateProductReq
 	}
 
 	if err := s.repo.Create(ctx, product); err != nil {
-		return nil, err
+		return nil, apperrors.NewInternalErrorWithCause("failed to create product", err)
 	}
 
 	// Clear product list cache
@@ -73,7 +74,7 @@ func (s *productService) GetByID(ctx context.Context, id uint) (*model.Product, 
 	// Get from database
 	product, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, apperrors.NewNotFoundErrorWithCause("product not found", err)
 	}
 
 	// Cache the result
@@ -103,12 +104,12 @@ func (s *productService) List(ctx context.Context, page, pageSize int) ([]*model
 
 	products, err := s.repo.List(ctx, offset, pageSize)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, apperrors.NewInternalErrorWithCause("failed to list products", err)
 	}
 
 	total, err := s.repo.Count(ctx)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, apperrors.NewInternalErrorWithCause("failed to count products", err)
 	}
 
 	return products, total, nil
@@ -118,7 +119,7 @@ func (s *productService) List(ctx context.Context, page, pageSize int) ([]*model
 func (s *productService) Update(ctx context.Context, id uint, req *model.UpdateProductRequest) (*model.Product, error) {
 	product, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, apperrors.NewNotFoundErrorWithCause("product not found", err)
 	}
 
 	// Update fields if provided
@@ -136,7 +137,7 @@ func (s *productService) Update(ctx context.Context, id uint, req *model.UpdateP
 	}
 
 	if err := s.repo.Update(ctx, product); err != nil {
-		return nil, err
+		return nil, apperrors.NewInternalErrorWithCause("failed to update product", err)
 	}
 
 	// Clear cache
@@ -157,11 +158,11 @@ func (s *productService) Delete(ctx context.Context, id uint) error {
 	// Check if product exists
 	_, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return err
+		return apperrors.NewNotFoundErrorWithCause("product not found", err)
 	}
 
 	if err := s.repo.Delete(ctx, id); err != nil {
-		return err
+		return apperrors.NewInternalErrorWithCause("failed to delete product", err)
 	}
 
 	// Clear cache
