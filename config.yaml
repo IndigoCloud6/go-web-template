@@ -31,6 +31,6 @@ logger:
   compress: true      # Whether to compress rotated log files
 
 jwt:
-  secret: your-secret-key-change-in-production # JWT signing secret key
+  secret: your-secret-key-change-in-production # JWT signing secret key (use JWT_SECRET env var in production)
   expiration_hours: 24                         # Token validity period in hours
   issuer: go-web-template                      # Token issuer

@@ -130,6 +130,7 @@ You can also use environment variables to override configuration:
 - `SERVER_PORT`
 - `DATABASE_HOST`
 - `DATABASE_PASSWORD`
+- `JWT_SECRET` (recommended for production)
 - etc.
 
 ### 使用 Docker Compose 运行 (Run with Docker Compose)
