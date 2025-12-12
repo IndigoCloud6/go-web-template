@@ -3,6 +3,7 @@ package response
 import (
 	"net/http"
 
+	apperrors "github.com/IndigoCloud6/go-web-template/pkg/errors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -30,6 +31,17 @@ func Error(c *gin.Context, code int, message string) {
 	}
 	c.JSON(httpStatus, Response{
 		Code:    code,
+		Message: message,
+	})
+}
+
+// ErrorFromAppError sends an error response based on AppError type
+// This function maps custom error types to appropriate HTTP status codes
+func ErrorFromAppError(c *gin.Context, err error) {
+	httpStatus := apperrors.GetHTTPStatusCode(err)
+	message := apperrors.GetErrorMessage(err)
+	c.JSON(httpStatus, Response{
+		Code:    httpStatus,
 		Message: message,
 	})
 }

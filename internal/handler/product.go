@@ -5,6 +5,7 @@ import (
 
 	"github.com/IndigoCloud6/go-web-template/internal/model"
 	"github.com/IndigoCloud6/go-web-template/internal/service"
+	apperrors "github.com/IndigoCloud6/go-web-template/pkg/errors"
 	"github.com/IndigoCloud6/go-web-template/pkg/response"
 	"github.com/gin-gonic/gin"
 )
@@ -35,13 +36,13 @@ func NewProductHandler(productService service.ProductService) *ProductHandler {
 func (h *ProductHandler) CreateProduct(c *gin.Context) {
 	var req model.CreateProductRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, err.Error())
+		response.ErrorFromAppError(c, apperrors.NewValidationErrorWithCause("invalid request body", err))
 		return
 	}
 
 	product, err := h.productService.Create(c.Request.Context(), &req)
 	if err != nil {
-		response.InternalServerError(c, err.Error())
+		response.ErrorFromAppError(c, err)
 		return
 	}
 
@@ -63,13 +64,13 @@ func (h *ProductHandler) GetProduct(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
-		response.BadRequest(c, "invalid product id")
+		response.ErrorFromAppError(c, apperrors.NewValidationError("invalid product id"))
 		return
 	}
 
 	product, err := h.productService.GetByID(c.Request.Context(), uint(id))
 	if err != nil {
-		response.NotFound(c, "product not found")
+		response.ErrorFromAppError(c, err)
 		return
 	}
 
@@ -92,7 +93,7 @@ func (h *ProductHandler) ListProducts(c *gin.Context) {
 
 	products, total, err := h.productService.List(c.Request.Context(), page, pageSize)
 	if err != nil {
-		response.InternalServerError(c, err.Error())
+		response.ErrorFromAppError(c, err)
 		return
 	}
 
@@ -121,19 +122,19 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
-		response.BadRequest(c, "invalid product id")
+		response.ErrorFromAppError(c, apperrors.NewValidationError("invalid product id"))
 		return
 	}
 
 	var req model.UpdateProductRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, err.Error())
+		response.ErrorFromAppError(c, apperrors.NewValidationErrorWithCause("invalid request body", err))
 		return
 	}
 
 	product, err := h.productService.Update(c.Request.Context(), uint(id), &req)
 	if err != nil {
-		response.InternalServerError(c, err.Error())
+		response.ErrorFromAppError(c, err)
 		return
 	}
 
@@ -155,12 +156,12 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
-		response.BadRequest(c, "invalid product id")
+		response.ErrorFromAppError(c, apperrors.NewValidationError("invalid product id"))
 		return
 	}
 
 	if err := h.productService.Delete(c.Request.Context(), uint(id)); err != nil {
-		response.InternalServerError(c, err.Error())
+		response.ErrorFromAppError(c, err)
 		return
 	}
 

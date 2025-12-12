@@ -35,9 +35,13 @@ func InitializeApp(cfg *config.Config) (*Handlers, error) {
 	productRepository := repository.NewProductRepository(db)
 	productService := service.NewProductService(productRepository, client)
 	productHandler := handler.NewProductHandler(productService)
+	authService := service.NewAuthService(userRepository)
+	jwtConfig := provideJWTConfig(cfg)
+	authHandler := handler.NewAuthHandler(authService, jwtConfig)
 	handlers := &Handlers{
 		UserHandler:    userHandler,
 		ProductHandler: productHandler,
+		AuthHandler:    authHandler,
 	}
 	return handlers, nil
 }
@@ -48,6 +52,7 @@ func InitializeApp(cfg *config.Config) (*Handlers, error) {
 type Handlers struct {
 	UserHandler    *handler.UserHandler
 	ProductHandler *handler.ProductHandler
+	AuthHandler    *handler.AuthHandler
 }
 
 func provideDatabase(cfg *config.Config) (*gorm.DB, error) {
@@ -56,4 +61,8 @@ func provideDatabase(cfg *config.Config) (*gorm.DB, error) {
 
 func provideRedis(cfg *config.Config) (*redis.Client, error) {
 	return redis2.NewRedis(&cfg.Redis)
+}
+
+func provideJWTConfig(cfg *config.Config) *config.JWTConfig {
+	return &cfg.JWT
 }

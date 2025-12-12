@@ -8,6 +8,7 @@ import (
 
 	"github.com/IndigoCloud6/go-web-template/internal/model"
 	"github.com/IndigoCloud6/go-web-template/internal/repository"
+	apperrors "github.com/IndigoCloud6/go-web-template/pkg/errors"
 	"github.com/IndigoCloud6/go-web-template/pkg/logger"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -41,13 +42,13 @@ func (s *userService) Create(ctx context.Context, req *model.CreateUserRequest) 
 	// Check if email already exists
 	existingUser, err := s.repo.GetByEmail(ctx, req.Email)
 	if err == nil && existingUser != nil {
-		return nil, fmt.Errorf("email already exists")
+		return nil, apperrors.NewConflictError("email already exists")
 	}
 
 	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, fmt.Errorf("failed to hash password: %w", err)
+		return nil, apperrors.NewInternalErrorWithCause("failed to hash password", err)
 	}
 
 	user := &model.User{
@@ -58,7 +59,7 @@ func (s *userService) Create(ctx context.Context, req *model.CreateUserRequest) 
 	}
 
 	if err := s.repo.Create(ctx, user); err != nil {
-		return nil, err
+		return nil, apperrors.NewInternalErrorWithCause("failed to create user", err)
 	}
 
 	// Clear user list cache - note: in production, use a more sophisticated cache invalidation strategy
@@ -88,7 +89,7 @@ func (s *userService) GetByID(ctx context.Context, id uint) (*model.User, error)
 	// Get from database
 	user, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, apperrors.NewNotFoundErrorWithCause("user not found", err)
 	}
 
 	// Cache the result
@@ -118,12 +119,12 @@ func (s *userService) List(ctx context.Context, page, pageSize int) ([]*model.Us
 
 	users, err := s.repo.List(ctx, offset, pageSize)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, apperrors.NewInternalErrorWithCause("failed to list users", err)
 	}
 
 	total, err := s.repo.Count(ctx)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, apperrors.NewInternalErrorWithCause("failed to count users", err)
 	}
 
 	return users, total, nil
@@ -133,7 +134,7 @@ func (s *userService) List(ctx context.Context, page, pageSize int) ([]*model.Us
 func (s *userService) Update(ctx context.Context, id uint, req *model.UpdateUserRequest) (*model.User, error) {
 	user, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, apperrors.NewNotFoundErrorWithCause("user not found", err)
 	}
 
 	// Update fields if provided
@@ -144,7 +145,7 @@ func (s *userService) Update(ctx context.Context, id uint, req *model.UpdateUser
 		// Check if new email already exists
 		existingUser, err := s.repo.GetByEmail(ctx, req.Email)
 		if err == nil && existingUser != nil && existingUser.ID != id {
-			return nil, fmt.Errorf("email already exists")
+			return nil, apperrors.NewConflictError("email already exists")
 		}
 		user.Email = req.Email
 	}
@@ -152,7 +153,7 @@ func (s *userService) Update(ctx context.Context, id uint, req *model.UpdateUser
 		// Hash password
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 		if err != nil {
-			return nil, fmt.Errorf("failed to hash password: %w", err)
+			return nil, apperrors.NewInternalErrorWithCause("failed to hash password", err)
 		}
 		user.Password = string(hashedPassword)
 	}
@@ -161,7 +162,7 @@ func (s *userService) Update(ctx context.Context, id uint, req *model.UpdateUser
 	}
 
 	if err := s.repo.Update(ctx, user); err != nil {
-		return nil, err
+		return nil, apperrors.NewInternalErrorWithCause("failed to update user", err)
 	}
 
 	// Clear cache
@@ -182,11 +183,11 @@ func (s *userService) Delete(ctx context.Context, id uint) error {
 	// Check if user exists
 	_, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return err
+		return apperrors.NewNotFoundErrorWithCause("user not found", err)
 	}
 
 	if err := s.repo.Delete(ctx, id); err != nil {
-		return err
+		return apperrors.NewInternalErrorWithCause("failed to delete user", err)
 	}
 
 	// Clear cache

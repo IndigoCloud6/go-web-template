@@ -1,6 +1,7 @@
 server:
   port: 8080
   mode: debug # debug, release, test
+  shutdown_timeout: 30 # graceful shutdown timeout in seconds
 
 database:
   host: localhost
@@ -28,3 +29,8 @@ logger:
   max_backups: 3      # Maximum number of old log files to retain
   max_age: 28         # Maximum number of days to retain old log files
   compress: true      # Whether to compress rotated log files
+
+jwt:
+  secret: your-secret-key-change-in-production # JWT signing secret key
+  expiration_hours: 24                         # Token validity period in hours
+  issuer: go-web-template                      # Token issuer

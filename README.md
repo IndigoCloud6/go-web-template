@@ -25,23 +25,32 @@ A production-ready Go web service template with best practices and modern techno
 │   ├── config/
 │   │   └── config.go         # Configuration structures
 │   ├── handler/
-│   │   └── user.go           # HTTP handlers
+│   │   ├── auth.go           # Authentication handlers
+│   │   ├── product.go        # Product handlers
+│   │   └── user.go           # User handlers
 │   ├── middleware/
+│   │   ├── auth.go           # JWT authentication middleware
 │   │   ├── cors.go           # CORS middleware
 │   │   ├── logger.go         # Logging middleware
 │   │   └── recovery.go       # Panic recovery middleware
 │   ├── model/
-│   │   └── user.go           # Data models
+│   │   ├── product.go        # Product model
+│   │   └── user.go           # User model
 │   ├── repository/
-│   │   └── user.go           # Data access layer
+│   │   ├── product.go        # Product repository
+│   │   └── user.go           # User repository
 │   ├── service/
-│   │   └── user.go           # Business logic layer
+│   │   ├── auth.go           # Authentication service
+│   │   ├── product.go        # Product service
+│   │   └── user.go           # User service
 │   └── wire/
 │       ├── wire.go           # Wire dependency injection definitions
 │       └── wire_gen.go       # Wire generated code
 ├── pkg/
 │   ├── database/
 │   │   └── mysql.go          # MySQL connection
+│   ├── errors/
+│   │   └── errors.go         # Custom error types
 │   ├── redis/
 │   │   └── redis.go          # Redis connection
 │   ├── logger/
@@ -370,21 +379,136 @@ GOOS=linux GOARCH=amd64 go build -o bin/server cmd/server/main.go
 - ✅ Makefile for common tasks
 - ✅ Secure password hashing with bcrypt
 - ✅ Proper HTTP status codes for errors
+- ✅ **Custom error types** with precise HTTP status code mapping (validation, not found, unauthorized, forbidden, conflict, internal errors)
+- ✅ **JWT authentication middleware** with token generation and validation
+- ✅ **Graceful shutdown** to handle in-flight requests properly
+
+## Authentication (JWT)
+
+The application includes JWT (JSON Web Token) authentication support.
+
+### Configuration
+
+Add JWT settings to your `config.yaml`:
+
+```yaml
+jwt:
+  secret: your-secret-key-change-in-production  # JWT signing secret key
+  expiration_hours: 24                          # Token validity period in hours
+  issuer: go-web-template                       # Token issuer
+```
+
+### Authentication Endpoints
+
+#### Login
+
+```bash
+POST /api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+Response:
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "id": 1,
+      "name": "John Doe",
+      "email": "user@example.com"
+    }
+  }
+}
+```
+
+#### Refresh Token (Protected)
+
+```bash
+POST /api/v1/auth/refresh
+Authorization: Bearer <your-jwt-token>
+```
+
+#### Get Current User (Protected)
+
+```bash
+GET /api/v1/auth/me
+Authorization: Bearer <your-jwt-token>
+```
+
+### Using Protected Routes
+
+For protected routes, include the JWT token in the Authorization header:
+
+```bash
+curl -H "Authorization: Bearer <your-jwt-token>" http://localhost:8080/api/v1/auth/me
+```
+
+## Error Handling
+
+The application uses custom error types for precise HTTP status code mapping:
+
+| Error Type | HTTP Status Code |
+|------------|------------------|
+| ValidationError | 400 Bad Request |
+| UnauthorizedError | 401 Unauthorized |
+| ForbiddenError | 403 Forbidden |
+| NotFoundError | 404 Not Found |
+| ConflictError | 409 Conflict |
+| InternalError | 500 Internal Server Error |
+
+### Usage Example
+
+```go
+import apperrors "github.com/IndigoCloud6/go-web-template/pkg/errors"
+
+// Create a validation error
+err := apperrors.NewValidationError("invalid email format")
+
+// Create a not found error with underlying cause
+err := apperrors.NewNotFoundErrorWithCause("user not found", originalError)
+
+// Check error type
+if apperrors.IsNotFoundError(err) {
+    // Handle not found case
+}
+```
+
+## Graceful Shutdown
+
+The application supports graceful shutdown, which:
+- Listens for SIGINT (Ctrl+C) and SIGTERM signals
+- Stops accepting new connections
+- Waits for in-flight requests to complete (configurable timeout)
+- Properly closes database and Redis connections
+
+Configure the shutdown timeout in `config.yaml`:
+
+```yaml
+server:
+  port: 8080
+  mode: debug
+  shutdown_timeout: 30  # graceful shutdown timeout in seconds
+```
 
 ## 生产环境建议 (Production Recommendations)
 
 This template provides a solid foundation, but for production use, consider:
 
-- **Error Handling**: Implement custom error types to distinguish between different error scenarios (validation errors, not found errors, internal errors) for more precise HTTP status code mapping
 - **Cache Strategy**: For high-traffic applications, consider using cache versioning or cache tags instead of key scanning for better performance
-- **Authentication**: Add JWT or OAuth2 authentication middleware
 - **Rate Limiting**: Implement API rate limiting to prevent abuse
 - **Monitoring**: Add metrics collection (Prometheus) and tracing (OpenTelemetry)
 - **Testing**: Add comprehensive unit tests and integration tests
 - **Database Migrations**: Use a migration tool like golang-migrate for better version control
-- **Graceful Shutdown**: Implement graceful shutdown to handle in-flight requests
 - **Environment-specific Configs**: Separate configs for dev, staging, and production
 - **API Versioning**: Consider API versioning strategy for future changes
+- **OAuth2 Integration**: Extend authentication with OAuth2 providers (Google, GitHub, etc.)
 
 ## 许可证 (License)
 
